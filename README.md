@@ -1,149 +1,121 @@
 # Edge Inference Server
 
-This project implements a lightweight edge server for performing inference on embedded machine learning models using Kubernetes (K3s) and TensorFlow Lite for microcontrollers.
-
-## System Architecture
-
-The system is composed of:
-- **1 Master Node**: Higher-performance device running the Kubernetes control plane
-- **2 Worker Nodes**: Less powerful devices running the worker services
-
-### Key Components
-
-- **Kubernetes (K3s)**: Lightweight Kubernetes distribution optimized for edge computing
-- **TensorFlow Lite**: Optimized version of TensorFlow for microcontroller environments
-- **Docker**: Containerization for the ML model
-- **Prometheus & InfluxDB**: Metrics collection and storage
-- **PlatformIO**: Simulator for the microcontroller environment
+This project implements a lightweight edge server for performing inference on embedded machine learning models using Docker Desktop Kubernetes and TensorFlow Lite.
 
 ## Prerequisites
 
-- Three devices with Linux installed (one master, two workers)
-- Docker installed on all nodes
+- Windows 10/11
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) with Kubernetes enabled
+- [Python 3.8+](https://www.python.org/downloads/)
+- [Visual Studio Code](https://code.visualstudio.com/)
 - Git
-- PlatformIO (for simulation)
-- Internet connection for downloading packages
 
-## Setup Instructions
+## VSCode Extensions
+
+Open the project in VSCode and install the recommended extensions:
+- Docker
+- Kubernetes
+- Python
+- Remote - WSL (optional)
+- PowerShell
+- PlatformIO IDE
+
+## Quick Start
 
 ### 1. Clone the Repository
 
-```bash
-git clone https://github.com/yourusername/edge-inference-server.git
-cd edge-inference-server
+```powershell
+git clone https://github.com/sh32x/edge-server.git
+cd edge-server
 ```
 
-### 2. Set Up the Master Node
+### 2. Set Up the Environment
 
-```bash
-chmod +x scripts/setup-master.sh
-./scripts/setup-master.sh
+```powershell
+# Open PowerShell in VSCode terminal and run:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\setup-docker-kubernetes.ps1
 ```
 
-The script will output the Master IP and Node Token that you'll need for the worker nodes.
+### 3. Deploy the Application
 
-### 3. Set Up the Worker Nodes
-
-On each worker node, run:
-
-```bash
-chmod +x scripts/setup-worker.sh
-./scripts/setup-worker.sh <master_ip> <node_token>
+```powershell
+.\scripts\deploy.ps1
 ```
 
-Replace `<master_ip>` and `<node_token>` with the values from the master node setup.
+### 4. Test the Inference Service
 
-### 4. Deploy the Application
-
-On the master node, run:
-
-```bash
-chmod +x scripts/deploy.sh
-./scripts/deploy.sh
+```powershell
+.\tests\test-inference.ps1
 ```
 
-This will build the Docker image, deploy it to Kubernetes, and set up the services.
+For load testing, add the `--load-test` flag:
 
-### 5. Test the Inference Service
-
-Run the test script to verify that the inference service is working:
-
-```bash
-chmod +x tests/test-inference.sh
-./tests/test-inference.sh
+```powershell
+.\tests\test-inference.ps1 --load-test
 ```
 
-## PlatformIO Simulation
+### 5. Set Up and Run PlatformIO Simulation
 
-To run the microcontroller simulation with PlatformIO:
+```powershell
+# Set up PlatformIO environment
+.\scripts\setup-platformio.ps1
 
-```bash
-cd platformio
-pio run
+# Run microcontroller simulation
+.\scripts\run-simulation.ps1
 ```
 
-This will compile the code. To upload and run the simulation:
+## Running from VSCode
 
-```bash
-pio run -t upload
-pio device monitor
-```
+1. Open the project in VSCode
+2. Press `Ctrl+Shift+P` and type "Terminal: Create New Terminal" to open a PowerShell terminal
+3. Run the scripts as shown above
 
-## Metrics Collection
+### Using PlatformIO in VSCode
+PlatformIO is fully integrated with VSCode:
 
-The system collects the following metrics:
-- **Simulation clock speed**: CPU frequency of the nodes
-- **Memory usage**: RAM used by the inference service
-- **Bandwidth**: Data transferred for inference requests
-- **Inference time**: Time taken to process each inference request
+Click on the PlatformIO icon in the sidebar (ant-like logo)
+Under "Project Tasks", you'll find:
 
-### Accessing Metrics
+Build: Compile the simulation
+Upload: Build and upload to device (for ESP32)
+Monitor: Serial monitor
+Clean: Clean build files
+Test: Run unit tests
 
-#### Prometheus Dashboard
+For quick access, the PlatformIO toolbar at the bottom of VSCode provides shortcuts for common operations.
 
-```bash
-kubectl port-forward service/prometheus 9090:9090
-```
+### Debugging Python Code
 
-Then open `http://localhost:9090` in your browser.
+You can debug the inference service directly in VSCode:
+1. Open `docker/inference.py`
+2. Press F5 or use the Run and Debug sidebar
 
-#### InfluxDB Dashboard
+## Monitoring and Metrics
 
-```bash
-kubectl port-forward service/influxdb 8086:8086
-```
+The test script automatically sets up port forwarding for metrics services:
 
-Then open `http://localhost:8086` in your browser.
+- **Prometheus Dashboard**: http://localhost:9090
+- **InfluxDB Dashboard**: http://localhost:8086
 
 ## API Endpoints
 
-The inference service exposes the following endpoints:
+The inference service exposes these endpoints:
 
 - **POST /predict**: Run inference on the model
-  ```
-  curl -X POST -H "Content-Type: application/json" -d '{"input": [1.0, 2.0, 3.0, 4.0]}' http://<service_ip>/predict
+  ```powershell
+  Invoke-RestMethod -Uri "http://localhost:<port>/predict" -Method Post -Body '{"input": [1.0, 2.0, 3.0, 4.0]}' -ContentType "application/json"
   ```
 
 - **GET /health**: Check the health of the service
-  ```
-  curl http://<service_ip>/health
+  ```powershell
+  Invoke-RestMethod -Uri "http://localhost:<port>/health" -Method Get
   ```
 
 - **GET /metrics**: Get current metrics
+  ```powershell
+  Invoke-RestMethod -Uri "http://localhost:<port>/metrics" -Method Get
   ```
-  curl http://<service_ip>/metrics
-  ```
-
-## Project Structure
-
-```
-edge-inference-server/
-├── kubernetes/          # Kubernetes configuration files
-├── docker/              # Docker configuration 
-├── platformio/          # PlatformIO project
-├── scripts/             # Setup and deployment scripts
-└── tests/               # Test scripts
-```
 
 ## Customizing the ML Model
 
@@ -152,25 +124,70 @@ To use your own TensorFlow Lite model:
 1. Convert your model to TensorFlow Lite format
 2. Place the `.tflite` file in `docker/model/`
 3. Update the `inference.py` script if your model has different input/output requirements
-4. Rebuild and redeploy using the deployment script
+4. Redeploy using the deployment script
 
 ## Troubleshooting
 
 ### Common Issues
 
-- **Nodes not joining the cluster**: Verify that the correct master IP and node token are being used
-- **Docker image not building**: Check Docker installation and ensure the Dockerfile is correct
-- **Service not accessible**: Verify the service is running with `kubectl get services`
-- **Metrics not collecting**: Check that Prometheus and InfluxDB pods are running
+- **Docker Desktop not running**: Start Docker Desktop and enable Kubernetes
+- **Permission errors**: Run PowerShell as Administrator or use `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+- **Network errors**: Check that your ports (8086, 9090, etc.) aren't in use by other applications
+- **Docker build errors**: Ensure Docker has enough resources in Docker Desktop settings
 
 ### Logs
 
 To view logs for the inference service:
 
-```bash
+```powershell
 kubectl logs -l app=ml-inference
 ```
 
-## License
+## PlatformIO Simulation
 
-MIT
+The project includes a PlatformIO environment for microcontroller simulation:
+
+### Directory Structure
+```
+platformio/
+├── platformio.ini          # PlatformIO configuration
+└── src/                    # Source code
+    ├── main.cpp            # Microcontroller code
+    └── model.tflite        # TensorFlow Lite model
+```
+
+### Simulation Features
+- TensorFlow Lite for microcontrollers
+- JSON-based communication
+- Metrics reporting
+- Compatible with x86 Windows (native environment)
+- Optional ESP32 support for hardware deployment
+
+### Testing the Simulation
+
+When the simulation is running, you can send test data via the serial monitor:
+```json
+{"input": [1.0, 2.0, 3.0, 4.0]}
+```
+
+The simulation will process the input through the TensorFlow Lite model and return a result:
+```json
+{"status":"success","inference_time_ms":5,"output":[2.34567]}
+```
+
+## Clean Up
+
+To remove all deployed resources:
+
+```powershell
+kubectl delete -f kubernetes/deployment.yaml
+kubectl delete -f kubernetes/service.yaml
+kubectl delete -f kubernetes/metrics/prometheus.yaml
+kubectl delete -f kubernetes/metrics/influxdb.yaml
+```
+
+To stop port forwarding:
+
+```powershell
+Get-Job | Stop-Job; Get-Job | Remove-Job
+```
