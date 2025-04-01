@@ -1,4 +1,4 @@
-# PowerShell script for testing the edge inference service
+﻿# PowerShell script for testing the edge inference service
 # Must be run from the project root directory
 
 Write-Host "===== Testing Edge Inference Service =====" -ForegroundColor Green
@@ -11,7 +11,8 @@ try {
         exit 1
     }
     Write-Host "✓ Inference service is running" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "✗ Inference service is not deployed. Please run deploy.ps1 first." -ForegroundColor Red
     exit 1
 }
@@ -20,11 +21,13 @@ try {
 $serviceUrl = ""
 if (Test-Path ".service_url") {
     $serviceUrl = Get-Content ".service_url"
-} else {
+}
+else {
     $nodePort = kubectl get service ml-inference-service -o jsonpath='{.spec.ports[0].nodePort}'
     if ($nodePort) {
         $serviceUrl = "http://localhost:$nodePort"
-    } else {
+    }
+    else {
         Write-Host "✗ Could not determine service URL" -ForegroundColor Red
         exit 1
     }
@@ -38,7 +41,8 @@ try {
     $healthResponse = Invoke-RestMethod -Uri "$serviceUrl/health" -Method Get
     Write-Host "Health response: " -NoNewline
     $healthResponse | ConvertTo-Json
-} catch {
+}
+catch {
     Write-Host "✗ Health endpoint test failed: $_" -ForegroundColor Red
 }
 
@@ -52,7 +56,8 @@ try {
     $inferenceResponse = Invoke-RestMethod -Uri "$serviceUrl/predict" -Method Post -Body $body -ContentType "application/json"
     Write-Host "Inference response: " -NoNewline
     $inferenceResponse | ConvertTo-Json
-} catch {
+}
+catch {
     Write-Host "✗ Inference endpoint test failed: $_" -ForegroundColor Red
 }
 
@@ -62,7 +67,8 @@ try {
     $metricsResponse = Invoke-RestMethod -Uri "$serviceUrl/metrics" -Method Get
     Write-Host "Metrics response: " -NoNewline
     $metricsResponse | ConvertTo-Json
-} catch {
+}
+catch {
     Write-Host "✗ Metrics endpoint test failed: $_" -ForegroundColor Red
 }
 
@@ -104,7 +110,8 @@ if ($args[0] -eq "--load-test") {
         try {
             Invoke-RestMethod -Uri "$serviceUrl/predict" -Method Post -Body $body -ContentType "application/json" | Out-Null
             Write-Host "Success" -ForegroundColor Green
-        } catch {
+        }
+        catch {
             Write-Host "Failed: $_" -ForegroundColor Red
         }
         

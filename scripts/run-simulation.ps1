@@ -1,4 +1,4 @@
-# PowerShell script for running PlatformIO simulation
+﻿# PowerShell script for running PlatformIO simulation
 # Must be run from the project root directory
 
 Write-Host "===== Running PlatformIO Simulation =====" -ForegroundColor Green
@@ -13,7 +13,7 @@ if (-not (Test-Path $pioCmdPath)) {
 # Build the project
 Write-Host "`nBuilding PlatformIO project..." -ForegroundColor Cyan
 Set-Location -Path "platformio"
-& $pioCmdPath run --environment native
+& $pioCmdPath run --environment windows_simulation
 $buildSuccess = $?
 
 if (-not $buildSuccess) {
@@ -29,12 +29,13 @@ Write-Host "`nRunning simulation (Press Ctrl+C to stop)..." -ForegroundColor Cya
 Write-Host "--------------------------------------------------------------" -ForegroundColor Gray
 
 # Execute the program and capture output
-$programPath = "platformio\.pio\build\native\program.exe"
+$programPath = "platformio\.pio\build\windows_simulation\program.exe"
 if (Test-Path $programPath) {
     Set-Location -Path ".."
     & "$programPath"
-} else {
-    Write-Host "✗ Program not found. Build may have been incomplete." -ForegroundColor Red
+}
+else {
+    Write-Host "✗ Program not found at $programPath. Build may have been incomplete." -ForegroundColor Red
     Set-Location -Path ".."
     exit 1
 }

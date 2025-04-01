@@ -5,7 +5,7 @@ metadata:
   labels:
     app: ml-inference
 spec:
-  replicas: 3  # Will be distributed across the worker nodes
+  replicas: 1 # Faster deployment
   selector:
     matchLabels:
       app: ml-inference
@@ -19,39 +19,42 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       containers:
-      - name: ml-model
-        image: edge-ml-model:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8501
-          name: http
-        resources:
-          limits:
-            cpu: "500m"
-            memory: "256Mi"
-          requests:
-            cpu: "200m"
-            memory: "128Mi"
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8501
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8501
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        volumeMounts:
-        - name: model-volume
-          mountPath: /app/model
+        - name: ml-model
+          image: edge-ml-model:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8501
+              name: http
+          resources:
+            limits:
+              cpu: "300m"
+              memory: "128Mi"
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8501
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 4
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8501
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: model-volume
+              mountPath: /app/model
       volumes:
-      - name: model-volume
-        emptyDir: {}
+        - name: model-volume
+          emptyDir: {}

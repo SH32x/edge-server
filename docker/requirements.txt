@@ -1,6 +1,7 @@
-tensorflow==2.11.0
-tflite-runtime==2.11.0
+#tensorflow==2.11.0
+# Try tflite-runtime but don't fail if not available
 flask==2.2.3
+werkzeug==2.2.3
 numpy==1.24.2
 psutil==5.9.4
 prometheus-client==0.16.0

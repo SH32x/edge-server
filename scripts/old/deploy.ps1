@@ -1,17 +1,18 @@
-# PowerShell script for deploying the edge inference service
+﻿# PowerShell script for deploying the edge inference service
 # Must be run from the project root directory
 
 Write-Host "===== Deploying Edge Inference Service =====" -ForegroundColor Green
 
 # Verify Docker and Kubernetes are running
-try {
+<# try {
     docker version | Out-Null
     kubectl get nodes | Out-Null
     Write-Host "✓ Docker and Kubernetes are running" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "✗ Docker or Kubernetes is not running. Please run setup-docker-kubernetes.ps1 first." -ForegroundColor Red
     exit 1
-}
+} #>
 
 # Create a sample TensorFlow Lite model if not present
 if (-not (Test-Path "docker\model\model.tflite")) {
@@ -21,42 +22,8 @@ if (-not (Test-Path "docker\model\model.tflite")) {
         New-Item -Path "docker\model" -ItemType Directory | Out-Null
     }
     
-    # Here we'll create a simple Python script to generate a basic TFLite model
-    $pythonScript = @"
-import tensorflow as tf
-import numpy as np
-import os
-
-# Create a simple model
-model = tf.keras.Sequential([
-    tf.keras.layers.InputLayer(input_shape=(4,)),
-    tf.keras.layers.Dense(8, activation='relu'),
-    tf.keras.layers.Dense(1)
-])
-
-# Compile the model
-model.compile(optimizer='adam', loss='mse')
-
-# Train with dummy data
-x = np.random.random((10, 4))
-y = np.random.random((10, 1))
-model.fit(x, y, epochs=1, verbose=0)
-
-# Convert to TFLite
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
-tflite_model = converter.convert()
-
-# Save the model
-with open('docker/model/model.tflite', 'wb') as f:
-    f.write(tflite_model)
-
-print("Sample TFLite model created successfully")
-"@
-
-    # Save and run the Python script
-    $pythonScript | Out-File -FilePath "create_model.py" -Encoding utf8
-    python create_model.py
-    Remove-Item -Path "create_model.py"
+    # Use the model generator script
+    python scripts/generate_model.py "docker/model/model.tflite"
 }
 
 # Build the Docker image

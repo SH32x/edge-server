@@ -1,4 +1,4 @@
-# PowerShell script for setting up PlatformIO
+﻿# PowerShell script for setting up PlatformIO
 # Must be run from the project root directory
 
 Write-Host "===== Setting up PlatformIO Environment =====" -ForegroundColor Green
@@ -32,51 +32,17 @@ if (-not (Test-Path "platformio\src\model.tflite")) {
     
     # Ensure src directory exists
     if (-not (Test-Path "platformio\src")) {
-        New-Item -Path "platformio\src" -ItemType Directory | Out-Null
+        New-Item -Path "platformio\src" -ItemType Directory -Force | Out-Null
     }
     
     # Copy the model if it exists in docker folder, otherwise create a new one
     if (Test-Path "docker\model\model.tflite") {
         Copy-Item "docker\model\model.tflite" -Destination "platformio\src\model.tflite"
         Write-Host "✓ Copied existing model from docker\model\model.tflite" -ForegroundColor Green
-    } else {
+    }
+    else {
         # Create a simple Python script to generate a basic TFLite model
-        $pythonScript = @"
-import tensorflow as tf
-import numpy as np
-import os
-
-# Create a simple model
-model = tf.keras.Sequential([
-    tf.keras.layers.InputLayer(input_shape=(4,)),
-    tf.keras.layers.Dense(8, activation='relu'),
-    tf.keras.layers.Dense(1)
-])
-
-# Compile the model
-model.compile(optimizer='adam', loss='mse')
-
-# Train with dummy data
-x = np.random.random((10, 4))
-y = np.random.random((10, 1))
-model.fit(x, y, epochs=1, verbose=0)
-
-# Convert to TFLite
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
-tflite_model = converter.convert()
-
-# Save the model
-os.makedirs('platformio/src', exist_ok=True)
-with open('platformio/src/model.tflite', 'wb') as f:
-    f.write(tflite_model)
-
-print("Sample TFLite model created successfully for PlatformIO")
-"@
-
-        # Save and run the Python script
-        $pythonScript | Out-File -FilePath "create_platformio_model.py" -Encoding utf8
-        python create_platformio_model.py
-        Remove-Item -Path "create_platformio_model.py"
+        python scripts/generate_model.py "platformio/src/model.tflite"
     }
 }
 
@@ -92,7 +58,8 @@ if (-not (Test-Path "platformio\src\main.cpp")) {
     # Copy from the existing code if available
     if (Test-Path "platformio\src\main.cpp") {
         Write-Host "✓ main.cpp already exists" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "Creating new main.cpp from template..." -ForegroundColor Yellow
         # Create the file from our artifact
         # The content will come from our original microcontroller-code artifact
