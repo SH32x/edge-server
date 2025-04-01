@@ -4,7 +4,7 @@
 Write-Host "===== Deploying Edge Inference Service =====" -ForegroundColor Green
 
 # Verify Docker and Kubernetes are running
-<# try {
+try {
     docker version | Out-Null
     kubectl get nodes | Out-Null
     Write-Host "✓ Docker and Kubernetes are running" -ForegroundColor Green
@@ -12,7 +12,7 @@ Write-Host "===== Deploying Edge Inference Service =====" -ForegroundColor Green
 catch {
     Write-Host "✗ Docker or Kubernetes is not running. Please run setup-docker-kubernetes.ps1 first." -ForegroundColor Red
     exit 1
-} #>
+} 
 
 # Create a sample TensorFlow Lite model if not present
 if (-not (Test-Path "docker\model\model.tflite")) {

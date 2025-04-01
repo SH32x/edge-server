@@ -8,7 +8,7 @@ spec:
   selector:
     app: ml-inference
   ports:
-  - port: 80
-    targetPort: 8501
-    name: http
-  type: LoadBalancer  # Use NodePort if LoadBalancer is not available
+    - port: 80
+      targetPort: 8501
+      name: http
+  type: LoadBalancer

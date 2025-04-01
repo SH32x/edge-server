@@ -5,7 +5,7 @@ metadata:
   labels:
     app: ml-inference
 spec:
-  replicas: 1 # Faster deployment
+  replicas: 1
   selector:
     matchLabels:
       app: ml-inference
