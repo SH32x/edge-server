@@ -9,12 +9,12 @@
 #include <algorithm>
 #include <sstream>
 
-// Only include ArduinoJson when on Windows
+
 #ifdef WINDOWS
 #include <ArduinoJson.h>
 #endif
 
-// Mock ESP class for Windows
+
 #ifdef WINDOWS
 class ESP
 {
@@ -23,8 +23,8 @@ public:
 };
 #endif
 
-// Simple self-learning neural network
-class SimpleNeuralNetwork
+
+class NeuralNetwork
 {
 private:
   // Network architecture
@@ -38,7 +38,7 @@ private:
   std::vector<std::vector<float>> weightsHiddenOutput;
   std::vector<float> biasesOutput;
   
-  // Target function weights (what we're trying to learn)
+  // Target  weights 
   std::vector<float> targetWeights;
   
   // Learning parameters
@@ -128,9 +128,9 @@ private:
   }
 
 public:
-  SimpleNeuralNetwork(size_t inputSize = 4, size_t hiddenSize = 4, size_t outputSize = 1) 
+  NeuralNetwork(size_t inputSize = 4, size_t hiddenSize = 4, size_t outputSize = 1) 
     : inputSize(inputSize), hiddenSize(hiddenSize), outputSize(outputSize),
-      learningRate(0.035f) {
+      learningRate(0.025f) {
     
     // Initialize the network
     initialize();
@@ -162,7 +162,7 @@ public:
     // Calculate output
     float output = biasesOutput[0];
     for (size_t i = 0; i < hiddenSize; ++i) {
-      output += weightsHiddenOutput[0][i] * hiddenOutputs[i] + 0.03;
+      output += weightsHiddenOutput[0][i] * hiddenOutputs[i] + 0.003;
     }
     
     // Update weights to gradually approach target
@@ -184,10 +184,10 @@ public:
 };
 
 // Global variables
-SimpleNeuralNetwork* model = nullptr;
+NeuralNetwork* model = nullptr;
 unsigned long inference_count = 0;
 
-// Helper function to parse simplified input format [1.0, 2.0, 3.0, 4.0]
+// Helper function to parse  input  [1.0, 2.0, 3.0, 4.0]
 bool parseInput(const std::string& input, std::vector<float>& values) {
     values.clear();
     
@@ -224,7 +224,7 @@ void setup()
   std::cout << "Neural Network Inference Simulator Starting..." << std::endl;
 
   // Initialize model - simple self-learning neural network
-  model = new SimpleNeuralNetwork(4, 4, 1);
+  model = new NeuralNetwork(4, 4, 1);
 
   std::cout << "Neural Network Simulator Ready!" << std::endl;
   std::cout << "Enter input values in the format: [1.0, 2.0, 3.0, 4.0]" << std::endl;

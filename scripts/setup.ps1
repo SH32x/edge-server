@@ -1,9 +1,9 @@
-﻿# PowerShell script for setting up the edge inference service on Windows
-# Must be run from the project root directory
+﻿# PowerShell script for setting up the edge inference service 
 
-Write-Host "===== Setting up Edge Inference Service on Windows =====" -ForegroundColor Green
 
-# Check if Docker Desktop is installed and running
+Write-Host "===== Setting up Edge Inference Service =====" -ForegroundColor Green
+
+
 $dockerRunning = $false
 try {
     $dockerOutput = docker version 2>&1
