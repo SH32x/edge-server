@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-inference
+  labels:
+    app: ml-inference
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-inference
+  template:
+    metadata:
+      labels:
+        app: ml-inference
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8501"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: ml-model
+          image: edge-ml-model:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8501
+              name: http
+          resources:
+            limits:
+              cpu: "300m"
+              memory: "128Mi"
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8501
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 4
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8501
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: model-volume
+              mountPath: /app/model
+      volumes:
+        - name: model-volume
+          emptyDir: {}
